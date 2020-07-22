@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CargoProjects">
+    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="db199005-c224-46cf-86f4-c15cb1a5558e" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/parchg.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vaspchg_rs.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vaspchg_rs.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/chgcar.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/chgcar.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Rust File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="rg13p9aj" />
+  </component>
+  <component name="ProjectId" id="1f2DGTrW3RWclFhLV1fGTgmDqa8" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/Cargo.toml" />
+    <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
+    <property name="settings.editor.selected.configurable" value="preferences.editor.code.editing" />
+  </component>
+  <component name="RustProjectSettings">
+    <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
+    <option name="version" value="2" />
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="db199005-c224-46cf-86f4-c15cb1a5558e" name="Default Changelist" comment="" />
+      <created>1595407197408</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1595407197408</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="795" y="448" key="SettingsEditor" timestamp="1595421248870">
+      <screen x="0" y="23" width="2560" height="1337" />
+    </state>
+    <state x="795" y="448" key="SettingsEditor/0.23.2560.1337@0.23.2560.1337" timestamp="1595421248870" />
+    <state x="1144" y="685" width="574" height="255" key="org.intellij.images.editor.actions.BackgroundImageDialog" timestamp="1595421144815">
+      <screen x="0" y="23" width="2560" height="1337" />
+    </state>
+    <state x="1144" y="685" width="574" height="255" key="org.intellij.images.editor.actions.BackgroundImageDialog/0.23.2560.1337@0.23.2560.1337" timestamp="1595421144815" />
+  </component>
+</project>

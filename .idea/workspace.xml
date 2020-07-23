@@ -5,11 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="db199005-c224-46cf-86f4-c15cb1a5558e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/parchg.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vaspchg_rs.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vaspchg_rs.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/base.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/base.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/chgcar.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/chgcar.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,7 +38,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/Cargo.toml" />
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
-    <property name="settings.editor.selected.configurable" value="preferences.editor.code.editing" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
   <component name="RustProjectSettings">
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
@@ -60,10 +58,10 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state x="795" y="448" key="SettingsEditor" timestamp="1595421248870">
+    <state x="424" y="495" key="SettingsEditor" timestamp="1595514877751">
       <screen x="0" y="23" width="2560" height="1337" />
     </state>
-    <state x="795" y="448" key="SettingsEditor/0.23.2560.1337@0.23.2560.1337" timestamp="1595421248870" />
+    <state x="424" y="495" key="SettingsEditor/0.23.2560.1337@0.23.2560.1337" timestamp="1595514877751" />
     <state x="1144" y="685" width="574" height="255" key="org.intellij.images.editor.actions.BackgroundImageDialog" timestamp="1595421144815">
       <screen x="0" y="23" width="2560" height="1337" />
     </state>

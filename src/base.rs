@@ -4,7 +4,6 @@
 use std::io::{
     self,
     Write,
-    Read,
     BufRead,
     Seek,
     SeekFrom,
@@ -24,6 +23,8 @@ pub struct ChgBase {
     chgdiff:    Vec<Array3<f64>>,
     aug:        String,
     augdiff:    String,
+
+    ngrid: [usize; 3],
 }
 
 impl ChgBase {
@@ -31,39 +32,57 @@ impl ChgBase {
         todo!();
     }
 
+    pub fn from_reader<T>(file: &mut T) -> io::Result<Self>
+        where T: BufRead+Seek
+    {
+        file.seek(SeekFrom::Start(0))?;
+        let pos = Self::_read_poscar(file).unwrap();
+        todo!();
+    }
+
     fn _read_poscar<T>(file: &mut T) -> Result<Poscar, PoscarError>
         where T: BufRead+Seek
     {
-        file.seek(SeekFrom::Start(0))
-            .expect("Unreachable.");
         let mut stream = io::Cursor::<Vec<u8>>::new(vec![]);
-        let mut buf = String::new();
-        while let Ok(_) = file.read_line(&mut buf) {
-            if buf.trim().is_empty() {
+        for line in file.lines().map(|l| l.unwrap()) {
+            if line.trim().is_empty() {
                 break;
             } else {
-                stream.write(buf.as_bytes()).expect("Write to stream failed");
+                stream.write((line + "\n").as_bytes()).expect("Write to stream failed");
             }
-            buf.clear();
         }
-
-        stream.seek(SeekFrom::Start(0));
+        stream.seek(SeekFrom::Start(0)).unwrap();
         Poscar::from_reader(stream)
     }
 
-    fn _read_chg(file: &mut impl BufRead) -> Array3<f64> {
+    fn _read_chg(file: &mut impl BufRead) -> io::Result<Array3<f64>> {
+        let ngrid = file.lines()
+            .map(|l| l.unwrap())
+            .take(1)
+            .map(|l| l.split_ascii_whitespace()
+                .map(|t| t.parse::<usize>().unwrap())
+                .collect::<Vec<_>>())
+            .next().unwrap();
+        assert_eq!(ngrid.len(), 3);
+        let mut chg = Array3::<f64>::zeros((ngrid[0], ngrid[1], ngrid[2]));
+        Ok(
+            Array3::zeros((ngrid[0], ngrid[1], ngrid[2]))
+        )
+    }
+
+    fn _read_raw_aug(file: &mut impl BufRead) -> io::Result<String> {
         todo!();
     }
 
-    fn _read_raw_aug(file: &mut impl BufRead) -> String {
+    pub fn write_to(path: &impl AsRef<Path>) -> io::Result<u64> {
         todo!();
     }
 
-    pub fn write_to(path: &impl AsRef<Path>) -> io::Result<()> {
+    fn _write_chg(file: &mut impl Write, chg: &Array3<f64>, volume: f64) -> io::Result<u64> {
         todo!();
     }
 
-    fn _write_chg(file: &mut impl Write, chg: &Array3<f64>, volume: f64) {
+    fn _write_raw_aug(file: &mut impl Write, raw_aug: &str) -> io::Result<u64> {
         todo!();
     }
 }
@@ -71,12 +90,8 @@ impl ChgBase {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::process::exit;
 
-    #[test]
-    // #[ignore]
-    fn test_read_poscar_from_chgcar() {
-        let mut stream = io::Cursor::new("\
+    const SAMPLE: &'static str = "\
 unknown system
    1.00000000000000
      2.969072   -0.000523   -0.000907
@@ -91,7 +106,24 @@ Direct
  0.44062142953E+00 0.44635237036E+00 0.46294638829E+00 0.48881056285E+00 0.52211506729E+00
  0.56203432815E+00 0.60956087775E+00 0.66672131696E+00 0.73417916031E+00 0.80884817972E+00
  0.88351172791E+00 0.94912993844E+00 0.10000382501E+01 0.10353398391E+01 0.10568153616E+01
- 0.10677009023E+01 0.10709392990E+01 0.10677009023E+01 0.10568153616E+01 0.10353398391E+01");
+ 0.10677009023E+01 0.10709392990E+01 0.10677009023E+01 0.10568153616E+01 0.10353398391E+01";
+
+    #[test]
+    fn test_read_poscar() {
+        let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         ChgBase::_read_poscar(&mut stream).unwrap();
+
+        // after read_poscar, stream's cursor should be at "   32   32   32"
+        let mut it = stream.lines().map(|l| l.unwrap());
+        assert_eq!(it.next(), Some("   32   32   32".to_owned()));
+    }
+
+    #[test]
+    fn test_read_ngrid() {
+        let mut stream = io::Cursor::new(SAMPLE.as_bytes());
+        ChgBase::_read_poscar(&mut stream).unwrap();
+
+        let chg = ChgBase::_read_chg(&mut stream).unwrap();
+        assert_eq!(&[32usize, 32, 32], chg.shape());
     }
 }

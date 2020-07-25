@@ -1,3 +1,8 @@
 <component name="ProjectDictionaryState">
-  <dictionary name="ionizing" />
+  <dictionary name="ionizing">
+    <words>
+      <w>ngrid</w>
+      <w>poscar</w>
+    </words>
+  </dictionary>
 </component>

@@ -18,13 +18,17 @@ use vasp_poscar::{
 };
 use ndarray::Array3;
 use rayon::prelude::*;
+use regex::Regex;
+use itertools::Itertools;
+
+
 
 pub struct ChgBase {
     pos:        Poscar,
     chg:        Vec<Array3<f64>>,
     chgdiff:    Vec<Array3<f64>>,
-    aug:        String,
-    augdiff:    String,
+    aug:       Vec<String>,
+    augdiff:   Vec<String>,
 
     ngrid: [usize; 3],
 }
@@ -39,6 +43,7 @@ impl ChgBase {
     {
         file.seek(SeekFrom::Start(0))?;
         let pos = Self::_read_poscar(file).unwrap();
+        let chg = Self::_read_chg(file)?;
         todo!();
     }
 
@@ -65,22 +70,34 @@ impl ChgBase {
             .collect::<Vec<_>>();
 
         let mut buf = Vec::new();
-        lines.take_while(|l| !l.trim_start().starts_with("aug"))
-            .for_each(|l|
+        let mut lines = lines.peekable();
+        while let Some(l) = lines.peek() {
+            if l.starts_with("aug") {
+                break;
+            } else {
+                let _l = lines.next().unwrap();
                 buf.extend(
-                    l.split_ascii_whitespace()
+                    _l.split_ascii_whitespace()
                         .map(|t| t.parse::<f64>().unwrap())
-                )
-            );
-        let chg = Array3::<f64>::from_shape_vec((ngrid[2], ngrid[1], ngrid[0]), buf)
-            .unwrap();
+                );
+            }
+        }
+        assert!(lines.peek().unwrap().starts_with("aug"));
+        let chg = Array3::<f64>::from_shape_vec((ngrid[2], ngrid[1], ngrid[0]), buf).unwrap();
         Ok(
             chg.reversed_axes()
         )
     }
 
-    fn _read_raw_aug(file: &mut impl BufRead) -> io::Result<String> {
-        todo!();
+    fn _read_raw_aug(file: &mut (impl BufRead+Seek)) -> io::Result<String> {
+        let re = Regex::new(r"^(\s*\d{2,})+").unwrap();
+        let mut lines = file.lines().map(|l| l.unwrap()).peekable();
+        assert!(lines.peek().unwrap().starts_with("aug"));
+        let raw_aug = file.lines()
+            .map(|l| l.unwrap())
+            .take_while(|l| !re.is_match(l) )                // take until " NGXF NGYF NGZF"
+            .fold(String::new(), |acc, x| acc + "\n" + &x);  // Join all the lines with \n
+        Ok(raw_aug)
     }
 
     pub fn write_to(path: &impl AsRef<Path>) -> io::Result<u64> {
@@ -121,6 +138,10 @@ augmentation occupancies 1 15
   0.2743786E+00 -0.3307158E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
   0.1033253E-02  0.0000000E+00  0.0000000E+00  0.0000000E+00  0.3964234E-01
   0.5875445E-05 -0.7209739E-05 -0.3625569E-05  0.1019266E-04 -0.2068344E-05
+augmentation occupancies 2 15
+  0.2743786E+00 -0.3307158E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+  0.1033253E-02  0.0000000E+00  0.0000000E+00  0.0000000E+00  0.3964234E-01
+  0.5875445E-05 -0.7209739E-05 -0.3625569E-05  0.1019266E-04 -0.2068344E-05
 ";
 
     #[test]
@@ -140,5 +161,16 @@ augmentation occupancies 1 15
 
         let chg = ChgBase::_read_chg(&mut stream).unwrap();
         assert_eq!(&[2usize, 3, 4], chg.shape());
+        assert_eq!(chg[[1, 2, 3]], 0.10568153616E+01);
+    }
+
+    #[test]
+    fn test_read_aug() {
+        let mut stream = io::Cursor::new(SAMPLE.as_bytes());
+        ChgBase::_read_poscar(&mut stream).unwrap();
+        ChgBase::_read_chg(&mut stream).unwrap();
+
+        let aug = ChgBase::_read_raw_aug(&mut stream).unwrap();
+        dbg!(aug);
     }
 }

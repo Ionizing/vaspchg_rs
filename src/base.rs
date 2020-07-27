@@ -61,7 +61,7 @@ impl ChgBase {
         )
     }
 
-    fn _read_chg(file: &mut impl BufRead) -> io::Result<Array3<f64>> {
+    fn _read_chg(file: &mut (impl BufRead+Seek)) -> io::Result<Array3<f64>> {
         let mut lines = file.lines().map(|l| l.unwrap());
         let ngrid_line = lines.next().unwrap();
         let ngrid = ngrid_line.split_ascii_whitespace()
@@ -73,6 +73,9 @@ impl ChgBase {
         let mut lines = lines.peekable();
         while let Some(l) = lines.peek() {
             if l.starts_with("aug") {
+                let len = l.len() as i64 + 1;  // "+1" means taking account of the '\n'.
+                file.seek(SeekFrom::Current(0 - len))?;  // variable 'lines' should be invalid now
+                                                         // though compiles if you use it later
                 break;
             } else {
                 let _l = lines.next().unwrap();
@@ -82,7 +85,6 @@ impl ChgBase {
                 );
             }
         }
-        assert!(lines.peek().unwrap().starts_with("aug"));
         let chg = Array3::<f64>::from_shape_vec((ngrid[2], ngrid[1], ngrid[0]), buf).unwrap();
         Ok(
             chg.reversed_axes()
@@ -91,8 +93,7 @@ impl ChgBase {
 
     fn _read_raw_aug(file: &mut (impl BufRead+Seek)) -> io::Result<String> {
         let re = Regex::new(r"^(\s*\d{2,})+").unwrap();
-        let mut lines = file.lines().map(|l| l.unwrap()).peekable();
-        assert!(lines.peek().unwrap().starts_with("aug"));
+        let lines = file.lines().map(|l| l.unwrap()).peekable();
         let raw_aug = file.lines()
             .map(|l| l.unwrap())
             .take_while(|l| !re.is_match(l) )                // take until " NGXF NGYF NGZF"
@@ -155,7 +156,7 @@ augmentation occupancies 2 15
     }
 
     #[test]
-    fn test_read_ngrid() {
+    fn test_read_chg() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         ChgBase::_read_poscar(&mut stream).unwrap();
 
@@ -171,6 +172,7 @@ augmentation occupancies 2 15
         ChgBase::_read_chg(&mut stream).unwrap();
 
         let aug = ChgBase::_read_raw_aug(&mut stream).unwrap();
-        dbg!(aug);
+        dbg!(&aug);
+        assert!(aug.ends_with("-0.2068344E-05"));
     }
 }

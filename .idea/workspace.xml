@@ -5,11 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="db199005-c224-46cf-86f4-c15cb1a5558e" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/ionizing.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/ionizing.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/base.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/base.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,5 +64,9 @@
       <screen x="0" y="23" width="2560" height="1337" />
     </state>
     <state x="1144" y="685" width="574" height="255" key="org.intellij.images.editor.actions.BackgroundImageDialog/0.23.2560.1337@0.23.2560.1337" timestamp="1595421144815" />
+    <state x="1262" y="326" key="search.everywhere.popup" timestamp="1596020852912">
+      <screen x="0" y="23" width="2560" height="1337" />
+    </state>
+    <state x="1262" y="326" key="search.everywhere.popup/0.23.2560.1337@0.23.2560.1337" timestamp="1596020852912" />
   </component>
 </project>

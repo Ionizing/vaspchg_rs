@@ -25,10 +25,10 @@ use itertools::Itertools;
 
 pub struct ChgBase {
     pos:        Poscar,
-    chg:        Vec<Array3<f64>>,
-    chgdiff:    Vec<Array3<f64>>,
-    aug:       Vec<String>,
-    augdiff:   Vec<String>,
+    chg:        Array3<f64>,
+    chgdiff:    Option<Array3<f64>>,
+    aug:        Option<Vec<String>>,
+    augdiff:    Option<Vec<String>>,
 
     ngrid: [usize; 3],
 }
@@ -44,6 +44,8 @@ impl ChgBase {
         file.seek(SeekFrom::Start(0))?;
         let pos = Self::_read_poscar(file).unwrap();
         let chg = Self::_read_chg(file)?;
+
+
         todo!();
     }
 
@@ -69,22 +71,22 @@ impl ChgBase {
             .map(|t| t.parse::<usize>().unwrap())
             .collect::<Vec<_>>();
 
-        let mut buf = Vec::new();
-        let mut lines = lines.peekable();
-        while let Some(l) = lines.peek() {
-            if l.starts_with("aug") {
-                let len = l.len() as i64 + 1;  // "+1" means taking account of the '\n'.
-                file.seek(SeekFrom::Current(0 - len))?;  // variable 'lines' should be invalid now
-                                                         // though compiles if you use it later
-                break;
-            } else {
-                let _l = lines.next().unwrap();
-                buf.extend(
-                    _l.split_ascii_whitespace()
-                        .map(|t| t.parse::<f64>().unwrap())
-                );
-            }
-        }
+        let mut len = 0;
+        let buf = lines
+            .take_while(|l| {
+                if !l.starts_with("aug") {
+                    true
+                } else {
+                    len = l.len() as i64 + 1;   // "+1" means taking account of the '\n'.
+                    false
+                }
+            })
+            .fold(Vec::new(), |mut acc, l| {
+                acc.extend(l.split_ascii_whitespace()
+                    .map(|t| t.parse::<f64>().unwrap()));
+                acc
+            });
+        file.seek(SeekFrom::Current(0 - len))?; // move cursor back in front of 'augmentation'
         let chg = Array3::<f64>::from_shape_vec((ngrid[2], ngrid[1], ngrid[0]), buf).unwrap();
         Ok(
             chg.reversed_axes()
@@ -92,12 +94,19 @@ impl ChgBase {
     }
 
     fn _read_raw_aug(file: &mut (impl BufRead+Seek)) -> io::Result<String> {
-        let re = Regex::new(r"^(\s*\d{2,})+").unwrap();
-        let lines = file.lines().map(|l| l.unwrap()).peekable();
-        let raw_aug = file.lines()
-            .map(|l| l.unwrap())
-            .take_while(|l| !re.is_match(l) )                // take until " NGXF NGYF NGZF"
+        let re = Regex::new(r"^(\s*\d+){3}").unwrap();
+        let lines = file.lines().map(|l| l.unwrap());
+        let mut len = 0;
+        let raw_aug = lines
+            .take_while(|l| {
+                if !re.is_match(l) {
+                    true
+                } else {
+                    len = l.len() as i64 + 1;
+                    false
+                } })                // take until " NGXF NGYF NGZF"
             .fold(String::new(), |acc, x| acc + "\n" + &x);  // Join all the lines with \n
+        file.seek(SeekFrom::Current(0 - len));
         Ok(raw_aug)
     }
 
@@ -143,6 +152,20 @@ augmentation occupancies 2 15
   0.2743786E+00 -0.3307158E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
   0.1033253E-02  0.0000000E+00  0.0000000E+00  0.0000000E+00  0.3964234E-01
   0.5875445E-05 -0.7209739E-05 -0.3625569E-05  0.1019266E-04 -0.2068344E-05
+    2    3    4
+ 0.44062142953E+00 0.44635237036E+00 0.46294638829E+00 0.48881056285E+00 0.52211506729E+00
+ 0.56203432815E+00 0.60956087775E+00 0.66672131696E+00 0.73417916031E+00 0.80884817972E+00
+ 0.88351172791E+00 0.94912993844E+00 0.10000382501E+01 0.10353398391E+01 0.10568153616E+01
+ 0.10677009023E+01 0.10709392990E+01 0.10677009023E+01 0.10568153616E+01 0.10353398391E+01
+ 0.10677009023E+01 0.10709392990E+01 0.10677009023E+01 0.12668153616E+01
+augmentation occupancies 1 15
+  0.2743786E+00 -0.3307158E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+  0.1033253E-02  0.0000000E+00  0.0000000E+00  0.0000000E+00  0.3964234E-01
+  0.5875445E-05 -0.7209739E-05 -0.3625569E-05  0.1019266E-04 -0.2038144E-05
+augmentation occupancies 2 15
+  0.2743786E+00 -0.3307158E-01  0.0000000E+00  0.0000000E+00  0.0000000E+00
+  0.1033253E-02  0.0000000E+00  0.0000000E+00  0.0000000E+00  0.3964234E-01
+  0.5875445E-05 -0.7209739E-05 -0.3625569E-05  0.1019266E-04 -0.0038244E-05
 ";
 
     #[test]
@@ -174,5 +197,9 @@ augmentation occupancies 2 15
         let aug = ChgBase::_read_raw_aug(&mut stream).unwrap();
         dbg!(&aug);
         assert!(aug.ends_with("-0.2068344E-05"));
+
+        if let Some(line) = stream.lines().map(|l| l.unwrap()).next() {
+            assert!(line.split_ascii_whitespace().all(|s| s.parse::<usize>().is_ok()));
+        }
     }
 }

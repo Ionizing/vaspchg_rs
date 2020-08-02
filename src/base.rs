@@ -11,9 +11,7 @@ use vasp_poscar::{
     failure::Error as PoscarError,
 };
 use ndarray::Array3;
-use rayon::prelude::*;
 use regex::Regex;
-use itertools::Itertools;
 
 
 

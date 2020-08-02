@@ -2,13 +2,7 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
-use std::io::{
-    self,
-    Write,
-    BufRead,
-    Seek,
-    SeekFrom,
-};
+use std::io::{self, Write, BufRead, Seek, SeekFrom, BufReader};
 use std::path::Path;
 use std::fs::File;
 
@@ -27,15 +21,17 @@ pub struct ChgBase {
     pos:        Poscar,
     chg:        Array3<f64>,
     chgdiff:    Option<Array3<f64>>,
-    aug:        Option<Vec<String>>,
-    augdiff:    Option<Vec<String>>,
+    aug:        Option<String>,
+    augdiff:    Option<String>,
 
     ngrid: [usize; 3],
 }
 
 impl ChgBase {
     pub fn from_file(path: &impl AsRef<Path>) -> io::Result<Self> {
-        todo!();
+        let file = File::open(path)?;
+        let mut file = BufReader::new(file);
+        Self::from_reader(&mut file)
     }
 
     pub fn from_reader<T>(file: &mut T) -> io::Result<Self>
@@ -44,9 +40,14 @@ impl ChgBase {
         file.seek(SeekFrom::Start(0))?;
         let pos = Self::_read_poscar(file).unwrap();
         let chg = Self::_read_chg(file)?;
-
-
-        todo!();
+        let aug = Self::_read_raw_aug(file).ok();
+        let chgdiff = Self::_read_chg(file).ok();
+        let augdiff = Self::_read_raw_aug(file).ok();
+        let ngrid = chg.shape().to_owned();
+        let ngrid = [ngrid[0], ngrid[1], ngrid[2]];
+        Ok(
+            ChgBase { pos, chg, chgdiff, aug, augdiff, ngrid }
+        )
     }
 
     fn _read_poscar<T>(file: &mut T) -> Result<Poscar, PoscarError>
@@ -106,7 +107,7 @@ impl ChgBase {
                     false
                 } })                // take until " NGXF NGYF NGZF"
             .fold(String::new(), |acc, x| acc + "\n" + &x);  // Join all the lines with \n
-        file.seek(SeekFrom::Current(0 - len));
+        file.seek(SeekFrom::Current(0 - len))?;
         Ok(raw_aug)
     }
 

@@ -1,10 +1,11 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
-#![allow(unused_imports)]
+// #![allow(unused_imports)]
 
 use std::io::{self, Write, BufRead, Seek, SeekFrom, BufReader};
 use std::path::Path;
 use std::fs::File;
+use std::marker::PhantomData;
 
 use vasp_poscar::{
     Poscar,
@@ -13,9 +14,11 @@ use vasp_poscar::{
 use ndarray::Array3;
 use regex::Regex;
 
+pub(crate) struct CHG;
+pub(crate) struct CHGCAR;
+pub(crate) struct PARCHG;
 
-
-pub struct ChgBase {
+struct ChgBase<T> {
     pos:        Poscar,
     chg:        Array3<f64>,
     chgdiff:    Option<Array3<f64>>,
@@ -23,18 +26,23 @@ pub struct ChgBase {
     augdiff:    Option<String>,
 
     ngrid: [usize; 3],
+    _dummy: PhantomData<T>,
 }
 
-impl ChgBase {
+// type Chgcar = PhantomData<_>;
+
+pub(crate) trait ChgBaseWrite<T> {
+    fn write_file(&self) -> io::Result<()>;
+}
+
+impl<T> ChgBase<T> {
     pub fn from_file(path: &impl AsRef<Path>) -> io::Result<Self> {
         let file = File::open(path)?;
         let mut file = BufReader::new(file);
         Self::from_reader(&mut file)
     }
 
-    pub fn from_reader<T>(file: &mut T) -> io::Result<Self>
-        where T: BufRead+Seek
-    {
+    pub fn from_reader(file: &mut (impl BufRead+Seek)) -> io::Result<Self> {
         file.seek(SeekFrom::Start(0))?;
         let pos = Self::_read_poscar(file).unwrap();
         let chg = Self::_read_chg(file)?;
@@ -44,13 +52,11 @@ impl ChgBase {
         let ngrid = chg.shape().to_owned();
         let ngrid = [ngrid[0], ngrid[1], ngrid[2]];
         Ok(
-            ChgBase { pos, chg, chgdiff, aug, augdiff, ngrid }
+            ChgBase { pos, chg, chgdiff, aug, augdiff, ngrid, _dummy: PhantomData }
         )
     }
 
-    fn _read_poscar<T>(file: &mut T) -> Result<Poscar, PoscarError>
-        where T: BufRead+Seek
-    {
+    fn _read_poscar(file: &mut (impl BufRead+Seek)) -> Result<Poscar, PoscarError> {
         let mut buf = String::new();
         while let Ok(n) = file.read_line(&mut buf) {
             if 1 == n {
@@ -125,6 +131,8 @@ impl ChgBase {
 #[cfg(test)]
 mod tests {
     use super::*;
+    struct DummyType;
+    type DummyChgType = ChgBase<DummyType>;
 
     const SAMPLE: &'static str = "\
 unknown system
@@ -170,7 +178,7 @@ augmentation occupancies 2 15
     #[test]
     fn test_read_poscar() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
-        ChgBase::_read_poscar(&mut stream).unwrap();
+        DummyChgType::_read_poscar(&mut stream).unwrap();
 
         // after read_poscar, stream's cursor should be at "   32   32   32"
         let mut it = stream.lines().map(|l| l.unwrap());
@@ -180,9 +188,9 @@ augmentation occupancies 2 15
     #[test]
     fn test_read_chg() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
-        ChgBase::_read_poscar(&mut stream).unwrap();
+        DummyChgType::_read_poscar(&mut stream).unwrap();
 
-        let chg = ChgBase::_read_chg(&mut stream).unwrap();
+        let chg = DummyChgType::_read_chg(&mut stream).unwrap();
         assert_eq!(&[2usize, 3, 4], chg.shape());
         assert_eq!(chg[[1, 2, 3]], 0.10568153616E+01);
     }
@@ -190,10 +198,10 @@ augmentation occupancies 2 15
     #[test]
     fn test_read_aug() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
-        ChgBase::_read_poscar(&mut stream).unwrap();
-        ChgBase::_read_chg(&mut stream).unwrap();
+        DummyChgType::_read_poscar(&mut stream).unwrap();
+        DummyChgType::_read_chg(&mut stream).unwrap();
 
-        let aug = ChgBase::_read_raw_aug(&mut stream).unwrap();
+        let aug = DummyChgType::_read_raw_aug(&mut stream).unwrap();
         dbg!(&aug);
         assert!(aug.ends_with("-0.2068344E-05"));
 

@@ -1,7 +1,11 @@
 <component name="ProjectDictionaryState">
   <dictionary name="ionizing">
     <words>
+      <w>augdiff</w>
+      <w>chgcar</w>
+      <w>chgdiff</w>
       <w>ngrid</w>
+      <w>parchg</w>
       <w>poscar</w>
     </words>
   </dictionary>

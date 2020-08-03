@@ -13,26 +13,25 @@ use vasp_poscar::{
 };
 use ndarray::Array3;
 use regex::Regex;
+use regex::internal::Input;
 
-pub(crate) struct CHG;
-pub(crate) struct CHGCAR;
-pub(crate) struct PARCHG;
-
-struct ChgBase<T> {
+pub(crate) struct ChgBase<T> {
+    // Essential part
     pos:        Poscar,
     chg:        Array3<f64>,
-    chgdiff:    Option<Array3<f64>>,
     aug:        Option<String>,
-    augdiff:    Option<String>,
+    ngrid:      [usize; 3],
 
-    ngrid: [usize; 3],
+    // Optional part
+    chgdiff:    Option<Vec<Array3<f64>>>,
+    augdiff:    Option<Vec<String>>,
+
     _dummy: PhantomData<T>,
 }
 
-// type Chgcar = PhantomData<_>;
-
-pub(crate) trait ChgBaseWrite<T> {
-    fn write_file(&self) -> io::Result<()>;
+pub(crate) trait ChgWrite<T> {
+    fn write_file(&self, path: &impl AsRef<Path>) -> io::Result<()>;
+    fn write_writer(&self, file: &mut impl Write) -> io::Result<()>;
 }
 
 impl<T> ChgBase<T> {
@@ -45,15 +44,30 @@ impl<T> ChgBase<T> {
     pub fn from_reader(file: &mut (impl BufRead+Seek)) -> io::Result<Self> {
         file.seek(SeekFrom::Start(0))?;
         let pos = Self::_read_poscar(file).unwrap();
-        let chg = Self::_read_chg(file)?;
+        let chg = Self::_read_chg(file)? / pos.scaled_volume();
         let aug = Self::_read_raw_aug(file).ok();
-        let chgdiff = Self::_read_chg(file).ok();
-        let augdiff = Self::_read_raw_aug(file).ok();
+        let (chgdiff, augdiff) = Self::_read_optional_parts(file).unwrap();
         let ngrid = chg.shape().to_owned();
         let ngrid = [ngrid[0], ngrid[1], ngrid[2]];
         Ok(
-            ChgBase { pos, chg, chgdiff, aug, augdiff, ngrid, _dummy: PhantomData }
+            ChgBase { pos, chg, aug, chgdiff, augdiff, ngrid, _dummy: PhantomData }
         )
+    }
+
+    fn _read_optional_parts(file: &mut (impl BufRead+Seek))
+        -> io::Result<(Option<Vec<Array3<f64>>>, Option<Vec<String>>)> {
+        let mut chgdiff = vec![];
+        let mut augdiff = vec![];
+
+        while let Ok(chg) = Self::_read_chg(file) {
+            chgdiff.push(chg);
+            if let Ok(aug) = Self::_read_raw_aug(file) {
+                augdiff.push(aug);
+            }
+        }
+        let chgdiff = if chgdiff.is_empty() { None } else { Some(chgdiff) };
+        let augdiff = if augdiff.is_empty() { None } else { Some(augdiff) };
+        Ok((chgdiff, augdiff))
     }
 
     fn _read_poscar(file: &mut (impl BufRead+Seek)) -> Result<Poscar, PoscarError> {
@@ -115,17 +129,12 @@ impl<T> ChgBase<T> {
         Ok(raw_aug)
     }
 
-    pub fn write_to(path: &impl AsRef<Path>) -> io::Result<u64> {
-        todo!();
-    }
+    pub fn get_poscar(&self) -> &Poscar { &self.pos }
+    pub fn get_total_chg(&self) -> &Array3<f64> { &self.chg }
+    pub fn get_diff_chg(&self) -> &Array3<f64> { &self.chg }
 
-    fn _write_chg(file: &mut impl Write, chg: &Array3<f64>, volume: f64) -> io::Result<u64> {
-        todo!();
-    }
-
-    fn _write_raw_aug(file: &mut impl Write, raw_aug: &str) -> io::Result<u64> {
-        todo!();
-    }
+    pub(crate) fn get_total_aug(&self) -> &Option<String> { &self.aug }
+    pub(crate) fn get_diff_aug(&self) -> &Option<Vec<String>> { &self.augdiff }
 }
 
 #[cfg(test)]

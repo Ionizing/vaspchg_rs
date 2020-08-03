@@ -15,7 +15,7 @@ use ndarray::Array3;
 use regex::Regex;
 use regex::internal::Input;
 
-pub(crate) struct ChgBase<T> {
+pub struct ChgBase<T> {
     // Essential part
     pos:        Poscar,
     chg:        Array3<f64>,
@@ -29,7 +29,7 @@ pub(crate) struct ChgBase<T> {
     _dummy: PhantomData<T>,
 }
 
-pub(crate) trait ChgWrite<T> {
+pub trait ChgWrite {
     fn write_file(&self, path: &impl AsRef<Path>) -> io::Result<()>;
     fn write_writer(&self, file: &mut impl Write) -> io::Result<()>;
 }
@@ -84,7 +84,12 @@ impl<T> ChgBase<T> {
 
     fn _read_chg(file: &mut (impl BufRead+Seek)) -> io::Result<Array3<f64>> {
         let mut lines = file.lines().map(|l| l.unwrap());
-        let ngrid_line = lines.next().unwrap();
+        let nl = lines.next();
+        let ngrid_line = if nl.is_none() {
+            return Err(
+                io::Error::new(io::ErrorKind::Other, "End of file reached.")
+            );
+        } else { nl.unwrap() };
         let ngrid = ngrid_line.split_ascii_whitespace()
             .take(3)
             .map(|t| t.parse::<usize>().unwrap())
@@ -132,6 +137,7 @@ impl<T> ChgBase<T> {
     pub fn get_poscar(&self) -> &Poscar { &self.pos }
     pub fn get_total_chg(&self) -> &Array3<f64> { &self.chg }
     pub fn get_diff_chg(&self) -> &Array3<f64> { &self.chg }
+    pub fn get_ngrid(&self) -> &[usize; 3] { &self.ngrid }
 
     pub(crate) fn get_total_aug(&self) -> &Option<String> { &self.aug }
     pub(crate) fn get_diff_aug(&self) -> &Option<Vec<String>> { &self.augdiff }
@@ -185,6 +191,7 @@ augmentation occupancies 2 15
 ";
 
     #[test]
+    #[ignore]
     fn test_read_poscar() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         DummyChgType::_read_poscar(&mut stream).unwrap();
@@ -195,6 +202,7 @@ augmentation occupancies 2 15
     }
 
     #[test]
+    #[ignore]
     fn test_read_chg() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         DummyChgType::_read_poscar(&mut stream).unwrap();
@@ -205,17 +213,23 @@ augmentation occupancies 2 15
     }
 
     #[test]
+    #[ignore]
     fn test_read_aug() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         DummyChgType::_read_poscar(&mut stream).unwrap();
         DummyChgType::_read_chg(&mut stream).unwrap();
 
         let aug = DummyChgType::_read_raw_aug(&mut stream).unwrap();
-        dbg!(&aug);
         assert!(aug.ends_with("-0.2068344E-05"));
 
         if let Some(line) = stream.lines().map(|l| l.unwrap()).next() {
             assert!(line.split_ascii_whitespace().all(|s| s.parse::<usize>().is_ok()));
         }
+    }
+
+    #[test]
+    fn test_from_reader() {
+        let mut stream = io::Cursor::new(SAMPLE.as_bytes());
+        let chgcontent = DummyChgType::from_reader(&mut stream).unwrap();
     }
 }

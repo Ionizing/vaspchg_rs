@@ -5,13 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="db199005-c224-46cf-86f4-c15cb1a5558e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/error.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/base.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/base.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/chg.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/chg.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/chgcar.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/chgcar.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/parchg.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/parchg.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

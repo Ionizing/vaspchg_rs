@@ -40,7 +40,7 @@
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
     <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Cargo Command.Test base::tests::test_from_reader">
     <configuration name="Test base" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="channel" value="DEFAULT" />
       <option name="command" value="test --package vaspchg_rs --lib base" />
@@ -53,8 +53,34 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
+    <configuration name="Test base::tests::test_from_reader" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="channel" value="DEFAULT" />
+      <option name="command" value="test --package vaspchg_rs --lib base::tests::test_from_reader -- --exact" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test chgcar::tests::test_writer" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="channel" value="DEFAULT" />
+      <option name="command" value="test --package vaspchg_rs --lib chgcar::tests::test_writer -- --exact" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Cargo Command.Test base::tests::test_from_reader" />
+        <item itemvalue="Cargo Command.Test chgcar::tests::test_writer" />
         <item itemvalue="Cargo Command.Test base" />
       </list>
     </recent_temporary>
@@ -77,33 +103,37 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1117" height="382" key="GridCell.Tab.0.bottom" timestamp="1596285066134">
+    <state width="1470" height="382" key="GridCell.Tab.0.bottom" timestamp="1596774764434">
       <screen x="0" y="23" width="2560" height="1337" />
     </state>
-    <state width="1117" height="382" key="GridCell.Tab.0.bottom/0.23.2560.1337@0.23.2560.1337" timestamp="1596285066134" />
-    <state width="1117" height="382" key="GridCell.Tab.0.center" timestamp="1596285066134">
+    <state width="1470" height="382" key="GridCell.Tab.0.bottom/0.23.2560.1337@0.23.2560.1337" timestamp="1596774764434" />
+    <state width="1470" height="382" key="GridCell.Tab.0.center" timestamp="1596774764434">
       <screen x="0" y="23" width="2560" height="1337" />
     </state>
-    <state width="1117" height="382" key="GridCell.Tab.0.center/0.23.2560.1337@0.23.2560.1337" timestamp="1596285066134" />
-    <state width="1117" height="382" key="GridCell.Tab.0.left" timestamp="1596285066134">
+    <state width="1470" height="382" key="GridCell.Tab.0.center/0.23.2560.1337@0.23.2560.1337" timestamp="1596774764434" />
+    <state width="1470" height="382" key="GridCell.Tab.0.left" timestamp="1596774764433">
       <screen x="0" y="23" width="2560" height="1337" />
     </state>
-    <state width="1117" height="382" key="GridCell.Tab.0.left/0.23.2560.1337@0.23.2560.1337" timestamp="1596285066134" />
-    <state width="1117" height="382" key="GridCell.Tab.0.right" timestamp="1596285066134">
+    <state width="1470" height="382" key="GridCell.Tab.0.left/0.23.2560.1337@0.23.2560.1337" timestamp="1596774764433" />
+    <state width="1470" height="382" key="GridCell.Tab.0.right" timestamp="1596774764434">
       <screen x="0" y="23" width="2560" height="1337" />
     </state>
-    <state width="1117" height="382" key="GridCell.Tab.0.right/0.23.2560.1337@0.23.2560.1337" timestamp="1596285066134" />
+    <state width="1470" height="382" key="GridCell.Tab.0.right/0.23.2560.1337@0.23.2560.1337" timestamp="1596774764434" />
     <state x="424" y="495" key="SettingsEditor" timestamp="1595514877751">
       <screen x="0" y="23" width="2560" height="1337" />
     </state>
     <state x="424" y="495" key="SettingsEditor/0.23.2560.1337@0.23.2560.1337" timestamp="1595514877751" />
+    <state x="0" y="23" width="1047" height="1336" key="dock-window-1" timestamp="1596778972028">
+      <screen x="0" y="23" width="2560" height="1337" />
+    </state>
+    <state x="0" y="23" width="1047" height="1336" key="dock-window-1/0.23.2560.1337@0.23.2560.1337" timestamp="1596778972028" />
     <state x="1144" y="685" width="574" height="255" key="org.intellij.images.editor.actions.BackgroundImageDialog" timestamp="1595421144815">
       <screen x="0" y="23" width="2560" height="1337" />
     </state>
     <state x="1144" y="685" width="574" height="255" key="org.intellij.images.editor.actions.BackgroundImageDialog/0.23.2560.1337@0.23.2560.1337" timestamp="1595421144815" />
-    <state x="1262" y="326" width="672" height="678" key="search.everywhere.popup" timestamp="1596452796644">
+    <state x="1262" y="326" width="672" height="678" key="search.everywhere.popup" timestamp="1596770532143">
       <screen x="0" y="23" width="2560" height="1337" />
     </state>
-    <state x="1262" y="326" width="672" height="678" key="search.everywhere.popup/0.23.2560.1337@0.23.2560.1337" timestamp="1596452796644" />
+    <state x="1262" y="326" width="672" height="678" key="search.everywhere.popup/0.23.2560.1337@0.23.2560.1337" timestamp="1596770532143" />
   </component>
 </project>

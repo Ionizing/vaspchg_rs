@@ -44,7 +44,7 @@ impl<T> ChgBase<T> {
     pub fn from_reader(file: &mut (impl BufRead+Seek)) -> io::Result<Self> {
         file.seek(SeekFrom::Start(0))?;
         let pos = Self::_read_poscar(file).unwrap();
-        let chg = Self::_read_chg(file)? / pos.scaled_volume();
+        let chg = Self::_read_chg(file)?;
         let aug = Self::_read_raw_aug(file).ok();
         let (chgdiff, augdiff) = Self::_read_optional_parts(file).unwrap();
         let ngrid = chg.shape().to_owned();
@@ -134,13 +134,39 @@ impl<T> ChgBase<T> {
         Ok(raw_aug)
     }
 
+    pub(crate) fn _write_chg(file: &mut impl Write, chg: &Array3<f64>, num_per_row: usize) -> io::Result<()> {
+        let chg = chg.clone().reversed_axes();
+        chg.shape().iter().rev()
+            .try_for_each(|n| write!(file, " {:>4}", n))?;
+        write!(file, "\n")?;
+        chg.as_slice().unwrap()
+            .chunks(num_per_row)
+            .try_for_each(|l| {
+                l.iter().try_for_each(|n| write!(file, " {:>17.10E}", n)).unwrap();
+                write!(file, "\n")
+            })?;
+        Ok(())
+    }
+
     pub fn get_poscar(&self) -> &Poscar { &self.pos }
     pub fn get_total_chg(&self) -> &Array3<f64> { &self.chg }
-    pub fn get_diff_chg(&self) -> &Array3<f64> { &self.chg }
+    pub fn get_diff_chg(&self) -> Option<&Vec<Array3<f64>>> {
+        if let Some(dchg) = &self.chgdiff {
+            Some(dchg)
+        } else { None }
+    }
     pub fn get_ngrid(&self) -> &[usize; 3] { &self.ngrid }
 
-    pub(crate) fn get_total_aug(&self) -> &Option<String> { &self.aug }
-    pub(crate) fn get_diff_aug(&self) -> &Option<Vec<String>> { &self.augdiff }
+    pub(crate) fn get_total_aug(&self) -> Option<&String> {
+        if let Some(aug) = &self.aug {
+            Some(aug)
+        } else { None }
+    }
+    pub(crate) fn get_diff_aug(&self) -> Option<&Vec<String>> {
+        if let Some(daug) = &self.augdiff {
+            Some(daug)
+        } else { None }
+    }
 }
 
 #[cfg(test)]
@@ -231,5 +257,26 @@ augmentation occupancies 2 15
     fn test_from_reader() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         let chgcontent = DummyChgType::from_reader(&mut stream).unwrap();
+        assert_eq!(&chgcontent.ngrid, &[2, 3, 4]);
+        assert!(chgcontent.chgdiff.is_some());
+        assert_eq!(chgcontent.chgdiff.unwrap().len(), 1);
+    }
+
+    // #[test]
+    // #[ignore]
+    // fn test_write_chg() {
+    //     let mut istream = io::Cursor::new(SAMPLE);
+    //     let chgcar = DummyChgType::from_reader(&mut istream).unwrap();
+    //
+    //     let mut ostream = io::Cursor::new(vec![0u8; 0]);
+    //     DummyChgType::_write_chg(&mut ostream, chgcar.get_total_chg(), 5).unwrap();
+    //     println!("{a}{a}", a=String::from_utf8(ostream.get_ref().clone()).unwrap());
+    // }
+
+    #[test]
+    fn test_print_aug() {
+        let mut istream = io::Cursor::new(SAMPLE);
+        let chgcar = DummyChgType::from_reader(&mut istream).unwrap();
+        dbg!(chgcar.aug);
     }
 }

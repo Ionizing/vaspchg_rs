@@ -4,8 +4,9 @@
 use crate::base;
 
 use std::io;
-use std::io::Write;
+use std::io::{Write, BufWriter};
 use std::path::Path;
+use std::fs::File;
 
 pub struct ChgcarType;
 pub type Chgcar = base::ChgBase<ChgcarType>;
@@ -13,23 +14,26 @@ use base::ChgWrite;
 
 impl ChgWrite for Chgcar {
     fn write_file(&self, path: &impl AsRef<Path>) -> io::Result<()> {
-        todo!();
+        let mut file = File::open(path)?;
+        let mut buf = BufWriter::new(vec![0u8; 0]);
+        self.write_writer(&mut buf)?;
+        file.write_all(buf.buffer())
     }
 
     fn write_writer(&self, file: &mut impl Write) -> io::Result<()> {
         write!(file, "{:>9.6}", self.get_poscar());
         write!(file, "\n");
-        self.get_ngrid().iter()
-            .for_each(|n| { write!(file, " {:>4}", n); });
-        write!(file, "\n");
-        self.get_total_chg()
-            .iter()
-            .collect::<Vec<_>>()
-            .chunks(5)
-            .for_each(|l| {
-                l.into_iter()
-                    .for_each(|n| {write!(file, " {:>17.10E}", n).unwrap();});
-                write!(file, "\n").unwrap(); });
+
+        Self::_write_chg(file, self.get_total_chg(), 5)?;
+
+        assert!(self.get_total_aug().is_some(), "No augmentation data found in this chg.");
+        write!(file, "{}\n", self.get_total_aug().unwrap())?;
+
+        if let Some(chgdiff) = self.get_diff_chg() {
+            Self::_write_chg(file, &chgdiff[0], 5)?;
+            write!(file, "{}\n", self.get_diff_aug().unwrap()[0])?;
+        }
+
         Ok(())
     }
 }
@@ -82,6 +86,7 @@ augmentation occupancies 2 15
 ";
 
     #[test]
+    #[ignore]
     fn test_writer() {
         let mut istream = io::Cursor::new(SAMPLE);
         let chgcar = Chgcar::from_reader(&mut istream).unwrap();

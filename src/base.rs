@@ -14,6 +14,7 @@ use vasp_poscar::{
 use ndarray::Array3;
 use regex::Regex;
 use regex::internal::Input;
+use std::process::exit;
 
 pub struct ChgBase {
     // Essential part
@@ -35,7 +36,7 @@ pub enum ChgType {
 
 
 impl ChgBase {
-    pub fn from_file(path: &impl AsRef<Path>) -> io::Result<Self> {
+    pub fn from_file(path: &(impl AsRef<Path> + ?Sized)) -> io::Result<Self> {
         let file = File::open(path)?;
         let mut file = BufReader::new(file);
         Self::from_reader(&mut file)
@@ -71,7 +72,7 @@ impl ChgBase {
     fn _read_poscar(file: &mut (impl BufRead+Seek)) -> Result<Poscar, PoscarError> {
         let mut buf = String::new();
         while let Ok(n) = file.read_line(&mut buf) {
-            if 1 == n {
+            if n + 1 == buf.len() - buf.trim_end().len() {
                 break;
             }
         }
@@ -107,7 +108,11 @@ impl ChgBase {
                 acc.extend(l.split_ascii_whitespace()
                     .map(|t| t.parse::<f64>().unwrap()));
                 acc
-            });
+            })
+            .into_iter()
+            .take(ngrid.iter().product())
+            .collect::<Vec<_>>();
+
         file.seek(SeekFrom::Current(0 - len))?; // move cursor back in front of 'augmentation'
         let chg = Array3::<f64>::from_shape_vec((ngrid[2], ngrid[1], ngrid[0]), buf).unwrap();
         Ok(
@@ -173,7 +178,7 @@ impl ChgBase {
         Ok(())
     }
 
-    pub fn write_file(&self, path: &impl AsRef<Path>, chgtype: ChgType) -> io::Result<()> {
+    pub fn write_file(&self, path: &(impl AsRef<Path> + ?Sized), chgtype: ChgType) -> io::Result<()> {
         let mut file = File::open(path)?;
         let mut buf = BufWriter::new(vec![0u8; 0]);
         self.write_writer(&mut buf, chgtype)?;

@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 // #![allow(unused_imports)]
 
-use std::io::{self, Write, BufRead, Seek, SeekFrom, BufReader};
+use std::io::{self, Write, BufRead, Seek, SeekFrom, BufReader, BufWriter};
 use std::path::Path;
 use std::fs::File;
 use std::marker::PhantomData;
@@ -15,7 +15,7 @@ use ndarray::Array3;
 use regex::Regex;
 use regex::internal::Input;
 
-pub struct ChgBase<T> {
+pub struct ChgBase {
     // Essential part
     pos:        Poscar,
     chg:        Array3<f64>,
@@ -23,18 +23,18 @@ pub struct ChgBase<T> {
     ngrid:      [usize; 3],
 
     // Optional part
-    chgdiff:    Option<Vec<Array3<f64>>>,
-    augdiff:    Option<Vec<String>>,
-
-    _dummy: PhantomData<T>,
+    chgdiff:    Vec<Array3<f64>>,
+    augdiff:    Vec<String>,
 }
 
-pub trait ChgWrite {
-    fn write_file(&self, path: &impl AsRef<Path>) -> io::Result<()>;
-    fn write_writer(&self, file: &mut impl Write) -> io::Result<()>;
+pub enum ChgType {
+    Chg,
+    Chgcar,
+    Parchg,
 }
 
-impl<T> ChgBase<T> {
+
+impl ChgBase {
     pub fn from_file(path: &impl AsRef<Path>) -> io::Result<Self> {
         let file = File::open(path)?;
         let mut file = BufReader::new(file);
@@ -50,12 +50,12 @@ impl<T> ChgBase<T> {
         let ngrid = chg.shape().to_owned();
         let ngrid = [ngrid[0], ngrid[1], ngrid[2]];
         Ok(
-            ChgBase { pos, chg, aug, chgdiff, augdiff, ngrid, _dummy: PhantomData }
+            ChgBase { pos, chg, aug, chgdiff, augdiff, ngrid }
         )
     }
 
     fn _read_optional_parts(file: &mut (impl BufRead+Seek))
-        -> io::Result<(Option<Vec<Array3<f64>>>, Option<Vec<String>>)> {
+        -> io::Result<(Vec<Array3<f64>>, Vec<String>)> {
         let mut chgdiff = vec![];
         let mut augdiff = vec![];
 
@@ -65,8 +65,6 @@ impl<T> ChgBase<T> {
                 augdiff.push(aug);
             }
         }
-        let chgdiff = if chgdiff.is_empty() { None } else { Some(chgdiff) };
-        let augdiff = if augdiff.is_empty() { None } else { Some(augdiff) };
         Ok((chgdiff, augdiff))
     }
 
@@ -134,7 +132,7 @@ impl<T> ChgBase<T> {
         Ok(raw_aug)
     }
 
-    pub(crate) fn _write_chg(file: &mut impl Write, chg: &Array3<f64>, num_per_row: usize) -> io::Result<()> {
+    fn _write_chg(file: &mut impl Write, chg: &Array3<f64>, num_per_row: usize) -> io::Result<()> {
         let chg = chg.clone().reversed_axes();
         chg.shape().iter().rev()
             .try_for_each(|n| write!(file, " {:>4}", n))?;
@@ -148,32 +146,55 @@ impl<T> ChgBase<T> {
         Ok(())
     }
 
-    pub fn get_poscar(&self) -> &Poscar { &self.pos }
-    pub fn get_total_chg(&self) -> &Array3<f64> { &self.chg }
-    pub fn get_diff_chg(&self) -> Option<&Vec<Array3<f64>>> {
-        if let Some(dchg) = &self.chgdiff {
-            Some(dchg)
-        } else { None }
-    }
-    pub fn get_ngrid(&self) -> &[usize; 3] { &self.ngrid }
+    pub fn write_writer(&self, file: &mut impl Write, chgtype: ChgType) -> io::Result<()> {
+        write!(file, "{:>9.6}", self.get_poscar());
+        write!(file, "\n");
 
-    pub(crate) fn get_total_aug(&self) -> Option<&String> {
+        Self::_write_chg(file, self.get_total_chg(), 5)?;
+        match chgtype {
+            ChgType::Chgcar => {
+                assert!(self.get_total_aug().is_some(),
+                        "No augmentation data found, cannot save as CHGCAR");
+                write!(file, "{}\n", self.get_total_aug().unwrap())?;
+            },
+            _ => {}
+        }
+
+        for i in 0 .. self.get_diff_chg().len() {
+            Self::_write_chg(file, &self.get_diff_chg()[i], 5)?;
+            match chgtype {
+                ChgType::Chgcar => {
+                    write!(file, "{}\n", &self.get_diff_aug()[i])?;
+                },
+                _ => {}
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn write_file(&self, path: &impl AsRef<Path>, chgtype: ChgType) -> io::Result<()> {
+        let mut file = File::open(path)?;
+        let mut buf = BufWriter::new(vec![0u8; 0]);
+        self.write_writer(&mut buf, chgtype)?;
+        file.write_all(buf.buffer())
+    }
+
+    pub fn get_poscar(&self) -> &Poscar             { &self.pos }
+    pub fn get_total_chg(&self) -> &Array3<f64>     { &self.chg }
+    pub fn get_diff_chg(&self) -> &Vec<Array3<f64>> { &self.chgdiff }
+    pub fn get_ngrid(&self) -> &[usize; 3]          { &self.ngrid }
+    pub fn get_total_aug(&self) -> Option<&String> {
         if let Some(aug) = &self.aug {
             Some(aug)
         } else { None }
     }
-    pub(crate) fn get_diff_aug(&self) -> Option<&Vec<String>> {
-        if let Some(daug) = &self.augdiff {
-            Some(daug)
-        } else { None }
-    }
+    pub fn get_diff_aug(&self) -> &Vec<String>      { &self.augdiff }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    struct DummyType;
-    type DummyChgType = ChgBase<DummyType>;
 
     const SAMPLE: &'static str = "\
 unknown system
@@ -217,10 +238,10 @@ augmentation occupancies 2 15
 ";
 
     #[test]
-    #[ignore]
+    // #[ignore]
     fn test_read_poscar() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
-        DummyChgType::_read_poscar(&mut stream).unwrap();
+        ChgBase::_read_poscar(&mut stream).unwrap();
 
         // after read_poscar, stream's cursor should be at "   32   32   32"
         let mut it = stream.lines().map(|l| l.unwrap());
@@ -228,24 +249,24 @@ augmentation occupancies 2 15
     }
 
     #[test]
-    #[ignore]
+    // #[ignore]
     fn test_read_chg() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
-        DummyChgType::_read_poscar(&mut stream).unwrap();
+        ChgBase::_read_poscar(&mut stream).unwrap();
 
-        let chg = DummyChgType::_read_chg(&mut stream).unwrap();
+        let chg = ChgBase::_read_chg(&mut stream).unwrap();
         assert_eq!(&[2usize, 3, 4], chg.shape());
         assert_eq!(chg[[1, 2, 3]], 0.10568153616E+01);
     }
 
     #[test]
-    #[ignore]
+    // #[ignore]
     fn test_read_aug() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
-        DummyChgType::_read_poscar(&mut stream).unwrap();
-        DummyChgType::_read_chg(&mut stream).unwrap();
+        ChgBase::_read_poscar(&mut stream).unwrap();
+        ChgBase::_read_chg(&mut stream).unwrap();
 
-        let aug = DummyChgType::_read_raw_aug(&mut stream).unwrap();
+        let aug = ChgBase::_read_raw_aug(&mut stream).unwrap();
         assert!(aug.ends_with("-0.2068344E-05"));
 
         if let Some(line) = stream.lines().map(|l| l.unwrap()).next() {
@@ -256,27 +277,26 @@ augmentation occupancies 2 15
     #[test]
     fn test_from_reader() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
-        let chgcontent = DummyChgType::from_reader(&mut stream).unwrap();
+        let chgcontent = ChgBase::from_reader(&mut stream).unwrap();
         assert_eq!(&chgcontent.ngrid, &[2, 3, 4]);
-        assert!(chgcontent.chgdiff.is_some());
-        assert_eq!(chgcontent.chgdiff.unwrap().len(), 1);
+        assert_eq!(chgcontent.chgdiff.len(), 1);
     }
 
-    // #[test]
+    #[test]
     // #[ignore]
-    // fn test_write_chg() {
-    //     let mut istream = io::Cursor::new(SAMPLE);
-    //     let chgcar = DummyChgType::from_reader(&mut istream).unwrap();
-    //
-    //     let mut ostream = io::Cursor::new(vec![0u8; 0]);
-    //     DummyChgType::_write_chg(&mut ostream, chgcar.get_total_chg(), 5).unwrap();
-    //     println!("{a}{a}", a=String::from_utf8(ostream.get_ref().clone()).unwrap());
-    // }
+    fn test_write_chg() {
+        let mut istream = io::Cursor::new(SAMPLE);
+        let chgcar = ChgBase::from_reader(&mut istream).unwrap();
+
+        let mut ostream = io::Cursor::new(vec![0u8; 0]);
+        ChgBase::_write_chg(&mut ostream, chgcar.get_total_chg(), 5).unwrap();
+        println!("{a}{a}", a=String::from_utf8(ostream.get_ref().clone()).unwrap());
+    }
 
     #[test]
     fn test_print_aug() {
         let mut istream = io::Cursor::new(SAMPLE);
-        let chgcar = DummyChgType::from_reader(&mut istream).unwrap();
+        let chgcar = ChgBase::from_reader(&mut istream).unwrap();
         dbg!(chgcar.aug);
     }
 }

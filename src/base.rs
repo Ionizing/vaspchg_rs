@@ -9,8 +9,75 @@ use vasp_poscar::{
 use ndarray::{Array3};
 use regex::Regex;
 
+/// Main struct of volumetric data
+///
+/// # CHGCAR
+///
+/// This file contains the lattice vectors, atomic coordinates, the total charge density multiplied
+/// by the volume `rho(r) * V_cell` on the fine FFT-grid `(NG(X,Y,Z)F)`, and the PAW
+/// one-center occupancies. CHGCAR can be used to restart VASP from an existing charge density.
+///
+/// ## Structure of CHGCAR
+///
+/// Here is a 'pseudo' CHGCAR file content
+///
+/// ```text
+/// unknown system                          \
+/// 1.00000000000000                        |
+/// 2.969072   -0.000523   -0.000907        |
+/// -0.987305    2.800110    0.000907       |
+/// -0.987305   -1.402326    2.423654       |-> positions of atom in POSCAR format
+/// Li                                      |
+/// 1                                       |
+/// Direct                                  |
+/// 0.000000  0.000000  0.000000            /
+///
+/// 2    3    4                             |-> number of grids in x, y, z directions.
+/// 0.44 0.44 0.46 0.48 0.52   \
+/// 0.56 0.60 0.66 0.73 0.80   |
+/// 0.88 0.94 0.10 0.10 0.10   |-> Total charge density
+/// 0.10 0.10 0.10 0.10 0.10   |
+/// 0.10 0.10 0.10 0.10        /
+/// augmentation occupancies 1 15  \
+/// 0.27 -0.33  0.00  0.00  0.00   |
+/// 0.10  0.00  0.00  0.00  0.39   |
+/// 0.58 -0.72 -0.36  0.10 -0.20   |-> PAW augmentation data
+/// augmentation occupancies 2 15  |
+/// 0.27 -0.33  0.00  0.00  0.00   |
+/// 0.10  0.00  0.00  0.00  0.39   |
+/// 0.58 -0.72 -0.36  0.10 -0.20   /
+/// 2    3    4                             |-> number of grids in x, y, z directions.
+/// 0.44 0.44 0.46 0.48 0.52   \
+/// 0.56 0.60 0.66 0.73 0.80   |    rho(up) - rho(dn) in ISPIN=2 system
+/// 0.88 0.94 0.10 0.10 0.10   | -> rho_x(up) - rho_x(dn) in SOC system
+/// 0.10 0.10 0.10 0.10 0.10   |    NO THIS PART IN ISPIN=1 SYSTEM
+/// 0.10 0.10 0.10 0.12        /
+/// augmentation occupancies 1 15  \
+/// 0.27 -0.33  0.00  0.00  0.00   |
+/// 0.10  0.00  0.00  0.00  0.39   |
+/// 0.58 -0.72 -0.36  0.10 -0.20   |
+/// augmentation occupancies 2 15  |-> PAW augmentation data
+/// 0.27 -0.33  0.00  0.00  0.00   |
+/// 0.10  0.00  0.00  0.00  0.39   |
+/// 0.58 -0.72 -0.36  0.10 -0.00   /
+/// <-- If this is an SOC system, another TWO charge density difference parts should be in the following -->
+/// <-- NGX NGY NGZ -->  rho_y(up) - rho_y(dn)
+/// <-- GRID DATA -->
+/// <-- NGX NGY NGZ -->  rho_z(up) - rho_z(dn)
+/// <-- GRID DATA -->
+/// ```
+///
+/// ## Structure of PARCHG/CHG
+///
+/// Similar to the structure of CHGCAR, but without augmentation parts.
+///
+/// PARCHG is the partial charge density which only takes the charge density of
+/// energy/band/kpoint specified electron states.
+///
+/// Also, CHG stores the total charge density of all the electrons below fermi level in all kpoint,
+/// all bands.
+///
 pub struct ChgBase {
-    // Essential part
     pos:        Poscar,
     chg:        Array3<f64>,
     aug:        Option<String>,
@@ -21,6 +88,7 @@ pub struct ChgBase {
     augdiff:    Vec<String>,
 }
 
+/// Supported formats in saving
 pub enum ChgType {
     Chg,
     Chgcar,
@@ -29,23 +97,28 @@ pub enum ChgType {
 
 
 impl ChgBase {
-    pub fn from_builder(chg: Array3<f64>, pos: Poscar) -> Self {
+    /// Construct a ChgBase with charge grids and poscar object.
+    pub fn from_builder(chg: Array3<f64>, chgdiff: Vec<Array3<f64>>, pos: Poscar) -> Self {
         let aug = None;
         let ngrid = chg.shape().to_owned();
         let ngrid = [ngrid[0], ngrid[1], ngrid[2]];
-        let chgdiff = vec![];
         let augdiff = vec![];
 
         Self { pos, chg, aug, ngrid, chgdiff, augdiff }
     }
 
-
+    /// Read volumetric data from existing file.
+    ///
+    /// Usually you can use &str as path(, or &std::path::Path, which is my preference).
     pub fn from_file(path: &(impl AsRef<Path> + ?Sized)) -> io::Result<Self> {
         let file = File::open(path)?;
         let mut file = BufReader::new(file);
         Self::from_reader(&mut file)
     }
 
+    /// Read volumetric data from reading buffer, and that buffer should implemented `Seek` trait.
+    ///
+    /// See the unit tests in this source file for detailed usage.
     pub fn from_reader(file: &mut (impl BufRead+Seek)) -> io::Result<Self> {
         file.seek(SeekFrom::Start(0))?;
         let pos = Self::_read_poscar(file).unwrap();
@@ -155,6 +228,9 @@ impl ChgBase {
         Ok(())
     }
 
+    /// Write ChgBase object to a write-buffer.
+    ///
+    /// Note: augmentation data is required if `chgtype == ChgType::Chgcar`
     pub fn write_writer(&self, file: &mut impl Write, chgtype: ChgType) -> io::Result<()> {
         write!(file, "{:>9.6}", self.get_poscar())?;
         write!(file, "\n")?;
@@ -182,6 +258,9 @@ impl ChgBase {
         Ok(())
     }
 
+    /// Write ChgBase object to a new file or overwrite the old file.
+    ///
+    /// Note: augmentation data is required if `chgtype == ChgType::Chgcar`
     pub fn write_file(&self, path: &(impl AsRef<Path> + ?Sized), chgtype: ChgType) -> io::Result<()> {
         let mut file = File::create(path)?;
         self.write_writer(&mut file, chgtype)?;
@@ -189,9 +268,17 @@ impl ChgBase {
     }
 
     pub fn get_poscar(&self) -> &Poscar             { &self.pos }
+    pub fn get_mut_poscar(&mut self) -> &mut Poscar { &mut self.pos}
+
     pub fn get_total_chg(&self) -> &Array3<f64>     { &self.chg }
+    pub fn get_mut_total_chg(&mut self) -> &mut Array3<f64> { &mut self.chg }
+
     pub fn get_diff_chg(&self) -> &Vec<Array3<f64>> { &self.chgdiff }
+    pub fn get_mut_diff_chg(&mut self) -> &mut Vec<Array3<f64>> { &mut self.chgdiff }
+
     pub fn get_ngrid(&self) -> &[usize; 3]          { &self.ngrid }
+    pub fn get_mut_ngrid(&mut self) -> &mut [usize; 3] { &mut self.ngrid }
+
     pub fn get_total_aug(&self) -> Option<&String> {
         if let Some(aug) = &self.aug {
             Some(aug)

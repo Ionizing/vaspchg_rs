@@ -1,7 +1,7 @@
 use std::io;
 use std::io::Read;
 use std::fs::File;
-use std::path::{ PathBuf, Path };
+use std::path::{PathBuf};
 use std::fs::remove_file;
 
 use flate2::read::GzDecoder;

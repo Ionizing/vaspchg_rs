@@ -1,8 +1,4 @@
-#![allow(unused_variables)]
-#![allow(dead_code)]
-// #![allow(unused_imports)]
-
-use std::io::{self, Write, BufRead, Seek, SeekFrom, BufReader, BufWriter};
+use std::io::{self, Write, BufRead, Seek, SeekFrom, BufReader};
 use std::path::Path;
 use std::fs::File;
 
@@ -12,8 +8,6 @@ use vasp_poscar::{
 };
 use ndarray::Array3;
 use regex::Regex;
-use regex::internal::Input;
-use std::process::exit;
 
 pub struct ChgBase {
     // Essential part
@@ -241,7 +235,7 @@ augmentation occupancies 2 15
 ";
 
     #[test]
-    #[ignore]
+    // #[ignore]
     fn test_read_poscar() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         ChgBase::_read_poscar(&mut stream).unwrap();
@@ -252,7 +246,7 @@ augmentation occupancies 2 15
     }
 
     #[test]
-    #[ignore]
+    // #[ignore]
     fn test_read_chg() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         ChgBase::_read_poscar(&mut stream).unwrap();
@@ -263,14 +257,14 @@ augmentation occupancies 2 15
     }
 
     #[test]
-    #[ignore]
+    // #[ignore]
     fn test_read_aug() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         ChgBase::_read_poscar(&mut stream).unwrap();
         ChgBase::_read_chg(&mut stream).unwrap();
 
         let aug = ChgBase::_read_raw_aug(&mut stream).unwrap();
-        assert!(aug.ends_with("-0.2068344E-05"));
+        assert!(aug.trim_end().ends_with("-0.2068344E-05"));
 
         if let Some(line) = stream.lines().map(|l| l.unwrap()).next() {
             assert!(line.split_ascii_whitespace().all(|s| s.parse::<usize>().is_ok()));
@@ -278,7 +272,7 @@ augmentation occupancies 2 15
     }
 
     #[test]
-    #[ignore]
+    // #[ignore]
     fn test_from_reader() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         let chgcontent = ChgBase::from_reader(&mut stream).unwrap();
@@ -287,7 +281,7 @@ augmentation occupancies 2 15
     }
 
     #[test]
-    #[ignore]
+    // #[ignore]
     fn test_write_chg() {
         let mut istream = io::Cursor::new(SAMPLE);
         let chgcar = ChgBase::from_reader(&mut istream).unwrap();
@@ -298,7 +292,7 @@ augmentation occupancies 2 15
     }
 
     #[test]
-    #[ignore]
+    // #[ignore]
     fn test_write_writer() -> io::Result<()> {
         let mut istream = io::Cursor::new(SAMPLE);
         let chgcar = ChgBase::from_reader(&mut istream)?;

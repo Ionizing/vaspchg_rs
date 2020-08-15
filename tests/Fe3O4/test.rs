@@ -1,6 +1,6 @@
 use std::io;
 use std::io::Read;
-use std::path::{ PathBuf, Path };
+use std::path::{PathBuf};
 use std::fs::File;
 use std::fs::remove_file;
 

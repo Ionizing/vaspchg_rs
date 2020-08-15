@@ -6,7 +6,7 @@ use vasp_poscar::{
     Poscar,
     failure::Error as PoscarError,
 };
-use ndarray::Array3;
+use ndarray::{Array3};
 use regex::Regex;
 
 pub struct ChgBase {
@@ -29,6 +29,17 @@ pub enum ChgType {
 
 
 impl ChgBase {
+    pub fn from_builder(chg: Array3<f64>, pos: Poscar) -> Self {
+        let aug = None;
+        let ngrid = chg.shape().to_owned();
+        let ngrid = [ngrid[0], ngrid[1], ngrid[2]];
+        let chgdiff = vec![];
+        let augdiff = vec![];
+
+        Self { pos, chg, aug, ngrid, chgdiff, augdiff }
+    }
+
+
     pub fn from_file(path: &(impl AsRef<Path> + ?Sized)) -> io::Result<Self> {
         let file = File::open(path)?;
         let mut file = BufReader::new(file);

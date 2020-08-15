@@ -7,10 +7,7 @@
     <list default="true" id="db199005-c224-46cf-86f4-c15cb1a5558e" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/base.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/base.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Fe3O4/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Fe3O4/test.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/no_spin/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/tests/no_spin/test.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/soc/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/tests/soc/test.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/spin/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/tests/spin/test.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -131,10 +128,10 @@
       <screen x="0" y="23" width="2560" height="1337" />
     </state>
     <state x="424" y="495" key="SettingsEditor/0.23.2560.1337@0.23.2560.1337" timestamp="1595514877751" />
-    <state x="1138" y="23" width="1041" height="1331" key="dock-window-1" timestamp="1597301853442">
+    <state x="0" y="23" width="1185" height="1317" key="dock-window-1" timestamp="1597474955862">
       <screen x="0" y="23" width="2560" height="1337" />
     </state>
-    <state x="1138" y="23" width="1041" height="1331" key="dock-window-1/0.23.2560.1337@0.23.2560.1337" timestamp="1597301853442" />
+    <state x="0" y="23" width="1185" height="1317" key="dock-window-1/0.23.2560.1337@0.23.2560.1337" timestamp="1597474955862" />
     <state x="1144" y="685" width="574" height="255" key="org.intellij.images.editor.actions.BackgroundImageDialog" timestamp="1595421144815">
       <screen x="0" y="23" width="2560" height="1337" />
     </state>

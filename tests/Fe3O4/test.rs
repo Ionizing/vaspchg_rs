@@ -2,6 +2,7 @@ use std::io;
 use std::io::Read;
 use std::path::{ PathBuf, Path };
 use std::fs::File;
+use std::fs::remove_file;
 
 use flate2::read::GzDecoder;
 
@@ -22,8 +23,12 @@ fn test_read() -> io::Result<()> {
     gz.read_to_string(&mut s)?;
     let mut stream = io::Cursor::new(s.as_bytes());
 
-    let chg = ChgBase::from_reader(&mut stream);
-
+    let chg = ChgBase::from_reader(&mut stream)?;
+    let mut stream = io::Cursor::new(vec![0u8; 0]);
+    chg.write_writer(&mut stream, ChgType::Chgcar)?;
+    assert_eq!(149805, String::from_utf8(stream.get_ref().clone()).unwrap().lines().count());
+    chg.write_file(&get_fpath_in_curr_dir!("CHGCAR_out_test.vasp"), ChgType::Chgcar)?;
+    remove_file(&get_fpath_in_curr_dir!("CHGCAR_out_test.vasp"))?;
     Ok(())
 }
 
@@ -37,7 +42,11 @@ fn test_read_ref() -> io::Result<()> {
     gz.read_to_string(&mut s)?;
     let mut stream = io::Cursor::new(s.as_bytes());
 
-    let chg = ChgBase::from_reader(&mut stream);
-
+    let chg = ChgBase::from_reader(&mut stream)?;
+    let mut stream = io::Cursor::new(vec![0u8; 0]);
+    chg.write_writer(&mut stream, ChgType::Chgcar)?;
+    assert_eq!(74674, String::from_utf8(stream.get_ref().clone()).unwrap().lines().count());
+    chg.write_file(&get_fpath_in_curr_dir!("CHGCAR_ref_test.vasp"), ChgType::Chgcar)?;
+    remove_file(&get_fpath_in_curr_dir!("CHGCAR_ref_test.vasp"))?;
     Ok(())
 }

@@ -7,14 +7,10 @@
     <list default="true" id="db199005-c224-46cf-86f4-c15cb1a5558e" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/base.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/base.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/Fe3O4/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Fe3O4/test.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/no_spin/CHGCAR.nospin.gz" beforeDir="false" afterPath="$PROJECT_DIR$/tests/no_spin/CHGCAR.nospin.gz" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/no_spin/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/tests/no_spin/test.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/soc/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/tests/soc/test.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/spin/test.rs" beforeDir="false" afterPath="$PROJECT_DIR$/tests/spin/test.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/tests.rs" beforeDir="false" afterPath="$PROJECT_DIR$/tests/tests.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,6 +36,7 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />

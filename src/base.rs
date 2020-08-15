@@ -5,7 +5,6 @@
 use std::io::{self, Write, BufRead, Seek, SeekFrom, BufReader, BufWriter};
 use std::path::Path;
 use std::fs::File;
-use std::marker::PhantomData;
 
 use vasp_poscar::{
     Poscar,
@@ -132,7 +131,7 @@ impl ChgBase {
                     len = l.len() as i64 + 1;
                     false
                 } })                // take until " NGXF NGYF NGZF"
-            .fold(String::new(), |acc, x| acc + "\n" + &x);  // Join all the lines with \n
+            .fold(String::new(), |acc, x| acc + &x + "\n");  // Join all the lines with \n
         file.seek(SeekFrom::Current(0 - len))?;
         Ok(raw_aug)
     }
@@ -152,15 +151,15 @@ impl ChgBase {
     }
 
     pub fn write_writer(&self, file: &mut impl Write, chgtype: ChgType) -> io::Result<()> {
-        write!(file, "{:>9.6}", self.get_poscar());
-        write!(file, "\n");
+        write!(file, "{:>9.6}", self.get_poscar())?;
+        write!(file, "\n")?;
 
         Self::_write_chg(file, self.get_total_chg(), 5)?;
         match chgtype {
             ChgType::Chgcar => {
                 assert!(self.get_total_aug().is_some(),
                         "No augmentation data found, cannot save as CHGCAR");
-                write!(file, "{}\n", self.get_total_aug().unwrap())?;
+                write!(file, "{}", self.get_total_aug().unwrap())?;
             },
             _ => {}
         }
@@ -179,10 +178,9 @@ impl ChgBase {
     }
 
     pub fn write_file(&self, path: &(impl AsRef<Path> + ?Sized), chgtype: ChgType) -> io::Result<()> {
-        let mut file = File::open(path)?;
-        let mut buf = BufWriter::new(vec![0u8; 0]);
-        self.write_writer(&mut buf, chgtype)?;
-        file.write_all(buf.buffer())
+        let mut file = File::create(path)?;
+        self.write_writer(&mut file, chgtype)?;
+        Ok(())
     }
 
     pub fn get_poscar(&self) -> &Poscar             { &self.pos }
@@ -243,7 +241,7 @@ augmentation occupancies 2 15
 ";
 
     #[test]
-    // #[ignore]
+    #[ignore]
     fn test_read_poscar() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         ChgBase::_read_poscar(&mut stream).unwrap();
@@ -254,7 +252,7 @@ augmentation occupancies 2 15
     }
 
     #[test]
-    // #[ignore]
+    #[ignore]
     fn test_read_chg() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         ChgBase::_read_poscar(&mut stream).unwrap();
@@ -265,7 +263,7 @@ augmentation occupancies 2 15
     }
 
     #[test]
-    // #[ignore]
+    #[ignore]
     fn test_read_aug() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         ChgBase::_read_poscar(&mut stream).unwrap();
@@ -280,6 +278,7 @@ augmentation occupancies 2 15
     }
 
     #[test]
+    #[ignore]
     fn test_from_reader() {
         let mut stream = io::Cursor::new(SAMPLE.as_bytes());
         let chgcontent = ChgBase::from_reader(&mut stream).unwrap();
@@ -288,20 +287,25 @@ augmentation occupancies 2 15
     }
 
     #[test]
-    // #[ignore]
+    #[ignore]
     fn test_write_chg() {
         let mut istream = io::Cursor::new(SAMPLE);
         let chgcar = ChgBase::from_reader(&mut istream).unwrap();
 
         let mut ostream = io::Cursor::new(vec![0u8; 0]);
         ChgBase::_write_chg(&mut ostream, chgcar.get_total_chg(), 5).unwrap();
-        println!("{a}{a}", a=String::from_utf8(ostream.get_ref().clone()).unwrap());
+        println!("{}", String::from_utf8(ostream.get_ref().clone()).unwrap());
     }
 
     #[test]
-    fn test_print_aug() {
+    #[ignore]
+    fn test_write_writer() -> io::Result<()> {
         let mut istream = io::Cursor::new(SAMPLE);
-        let chgcar = ChgBase::from_reader(&mut istream).unwrap();
-        dbg!(chgcar.aug);
+        let chgcar = ChgBase::from_reader(&mut istream)?;
+
+        let mut ostream = io::Cursor::new(vec![0u8; 0]);
+        chgcar.write_writer(&mut ostream, ChgType::Chgcar)?;
+        println!("{}", String::from_utf8(ostream.get_ref().clone()).unwrap());
+        Ok(())
     }
 }

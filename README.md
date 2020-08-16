@@ -1,5 +1,7 @@
 # vaspchg-rs
 
+![crates.io](https://img.shields.io/crates/v/vaspchg_rs.svg) ![docs.rs](https://docs.rs/vaspchg_rs/badge.svg)
+
 This is a crate aimed at reading/writing volumetric data file produced by [VASP](www.vasp.at).
 Mostly the files should be [`CHGCAR`](https://www.vasp.at/wiki/index.php/CHGCAR),
 [`CHG`](https://www.vasp.at/wiki/index.php/CHG) and [`PARCHG`](https://www.vasp.at/wiki/index.php/PARCHG)
@@ -26,7 +28,7 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 ```
- 
+
 # Usage/Document
 
 Clone this repository then run `cargo doc` to see the documents.

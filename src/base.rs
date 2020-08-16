@@ -49,7 +49,7 @@ use regex::Regex;
 /// 2    3    4                             |-> number of grids in x, y, z directions.
 /// 0.44 0.44 0.46 0.48 0.52   \
 /// 0.56 0.60 0.66 0.73 0.80   |    rho(up) - rho(dn) in ISPIN=2 system
-/// 0.88 0.94 0.10 0.10 0.10   | -> rho_x(up) - rho_x(dn) in SOC system
+/// 0.88 0.94 0.10 0.10 0.10   | -> rho_x in non collinear system
 /// 0.10 0.10 0.10 0.10 0.10   |    NO THIS PART IN ISPIN=1 SYSTEM
 /// 0.10 0.10 0.10 0.12        /
 /// augmentation occupancies 1 15  \
@@ -61,9 +61,9 @@ use regex::Regex;
 /// 0.10  0.00  0.00  0.00  0.39   |
 /// 0.58 -0.72 -0.36  0.10 -0.00   /
 /// <-- If this is an SOC system, another TWO charge density difference parts should be in the following -->
-/// <-- NGX NGY NGZ -->  rho_y(up) - rho_y(dn)
+/// <-- NGX NGY NGZ -->  rho_y
 /// <-- GRID DATA -->
-/// <-- NGX NGY NGZ -->  rho_z(up) - rho_z(dn)
+/// <-- NGX NGY NGZ -->  rho_z
 /// <-- GRID DATA -->
 /// ```
 ///
@@ -276,7 +276,11 @@ impl ChgBase {
     pub fn get_diff_chg(&self) -> &Vec<Array3<f64>> { &self.chgdiff }
     pub fn get_mut_diff_chg(&mut self) -> &mut Vec<Array3<f64>> { &mut self.chgdiff }
 
+    /// Return the immutable reference of the shape of the grid.
     pub fn get_ngrid(&self) -> &[usize; 3]          { &self.ngrid }
+    /// Return the mutable reference of the shape of the grid.
+    ///
+    /// Note: don't forget to **update the shpae** of if any `reshape` like operations are applied.
     pub fn get_mut_ngrid(&mut self) -> &mut [usize; 3] { &mut self.ngrid }
 
     pub fn get_total_aug(&self) -> Option<&String> {

@@ -8,6 +8,7 @@ description = "A lib to parse VASP's charge density file."
 homepage = "https://github.com/Ionizing/vaspchg_rs"
 repository = "https://github.com/Ionizing/vaspchg_rs"
 readme = "README.md"
+exclude = ["tests/*"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

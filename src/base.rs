@@ -193,7 +193,7 @@ impl ChgBase {
         file.seek(SeekFrom::Current(0 - len))?; // move cursor back in front of 'augmentation'
         let chg = Array3::<f64>::from_shape_vec((ngrid[2], ngrid[1], ngrid[0]), buf).unwrap();
         Ok(
-            chg.reversed_axes()
+            chg.reversed_axes().as_standard_layout().into_owned()
         )
     }
 
@@ -219,7 +219,7 @@ impl ChgBase {
         chg.shape().iter().rev()
             .try_for_each(|n| write!(file, " {:>4}", n))?;
         write!(file, "\n")?;
-        chg.as_slice().unwrap()
+        chg.as_standard_layout().into_owned().as_slice().unwrap()
             .chunks(num_per_row)
             .try_for_each(|l| {
                 l.iter().try_for_each(|n| write!(file, " {:>17.10E}", n)).unwrap();

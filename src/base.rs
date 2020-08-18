@@ -122,7 +122,7 @@ impl ChgBase {
     pub fn from_reader(file: &mut (impl BufRead+Seek)) -> io::Result<Self> {
         file.seek(SeekFrom::Start(0))?;
         let pos = Self::_read_poscar(file).unwrap();
-        let chg = Self::_read_chg(file)?;
+        let chg = Self::_read_chg(file)? / pos.scaled_volume();
         let aug = Self::_read_raw_aug(file).ok();
         let (chgdiff, augdiff) = Self::_read_optional_parts(file).unwrap();
         let ngrid = chg.shape().to_owned();
@@ -234,8 +234,8 @@ impl ChgBase {
     pub fn write_writer(&self, file: &mut impl Write, chgtype: ChgType) -> io::Result<()> {
         write!(file, "{:>9.6}", self.get_poscar())?;
         write!(file, "\n")?;
-
-        Self::_write_chg(file, self.get_total_chg(), 5)?;
+        let chg = self.get_total_chg() * self.get_poscar().scaled_volume();
+        Self::_write_chg(file, &chg, 5)?;
         match chgtype {
             ChgType::Chgcar => {
                 assert!(self.get_total_aug().is_some(),

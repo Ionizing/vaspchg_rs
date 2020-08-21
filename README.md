@@ -1,5 +1,6 @@
 # vaspchg-rs
 
+![Rust](https://github.com/Ionizing/vaspchg_rs/workflows/Rust/badge.svg?branch=master)
 ![crates.io](https://img.shields.io/crates/v/vaspchg_rs.svg) ![docs.rs](https://docs.rs/vaspchg_rs/badge.svg)
 
 This is a crate aimed at reading/writing volumetric data file produced by [VASP](www.vasp.at).
